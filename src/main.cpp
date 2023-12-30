@@ -16,4 +16,5 @@ void loop() {
   capacitance = (touchRead(touchPin));
   Serial.print("Sensor value: ");
   Serial.println(capacitance);
+  delay(100);
 }
