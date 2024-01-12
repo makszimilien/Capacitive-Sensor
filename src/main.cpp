@@ -1,9 +1,7 @@
 #include <Arduino.h>
 
-const int ledPin = GPIO_NUM_32;
-const int touchPin = GPIO_NUM_33;
-
-// int capacitance;
+const int chargePin = GPIO_NUM_32;
+const int measurePin = GPIO_NUM_33;
 
 unsigned long pulsInTimeBegin;
 unsigned long pulsInTimeEnd;
@@ -13,36 +11,36 @@ unsigned long pwmRead = 0;
 int pwmValue = 0;
 
 // Interrupt for non-blocking PWM reading
-void pwmPinInterrupt() {
-  if (digitalRead(touchPin) == HIGH) {
-    pulsInTimeBegin = micros();
-  } else {
-    pulsInTimeEnd = micros();
-    newPulseDurationAvailable = true;
-  }
+void measurePwm() {
+  pulsInTimeEnd = micros();
+  newPulseDurationAvailable = true;
+  digitalWrite(chargePin, LOW);
 };
 
 void setup() {
-  pinMode(ledPin, OUTPUT);
-  pinMode(touchPin, INPUT);
+  pinMode(chargePin, OUTPUT);
+  pinMode(measurePin, INPUT);
+
   Serial.begin(115200);
 
-  // Interrupt for non-blocking PWM reading
-  attachInterrupt(digitalPinToInterrupt(touchPin), pwmPinInterrupt, CHANGE);
+  // // Interrupt for non-blocking PWM reading
+  attachInterrupt(digitalPinToInterrupt(measurePin), measurePwm, RISING);
+  digitalWrite(chargePin, HIGH);
+  Serial.println("Device has been initialized");
 }
 
 void loop() {
-  // capacitance = (touchRead(touchPin));
-  // Serial.print("Sensor value: ");
-  // Serial.println(capacitance);
-  // delay(10);
 
   if (newPulseDurationAvailable) {
     newPulseDurationAvailable = false;
     pwmRead = pulsInTimeEnd - pulsInTimeBegin;
 
+    digitalWrite(chargePin, HIGH);
+    pulsInTimeBegin = micros();
+
     Serial.print("New PWM read: ");
     Serial.print(pwmRead);
-    Serial.println(" ms");
+    Serial.println(" us");
+    delay(1);
   }
 }
